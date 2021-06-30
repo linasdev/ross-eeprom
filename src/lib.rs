@@ -1,3 +1,4 @@
 #![no_std]
 
-pub mod ross_eeprom;
+mod ross_eeprom;
+pub use ross_eeprom::*;
