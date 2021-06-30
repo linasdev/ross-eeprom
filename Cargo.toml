@@ -1,0 +1,15 @@
+[package]
+name = "ross-eeprom"
+version = "0.1.0"
+authors = ["Linas Nikiperavičius <linas@linasdev.com>"]
+edition = "2018"
+
+[dependencies]
+cortex-m = "0.7.2"
+embedded-hal = "0.2.5"
+nb = "1.0.0"
+eeprom24x = "0.3.0"
+
+[dependencies.stm32f1xx-hal]
+git = "https://github.com/stm32-rs/stm32f1xx-hal"
+features = ["rt", "stm32f103", "medium"]
