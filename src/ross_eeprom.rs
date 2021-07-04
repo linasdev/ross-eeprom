@@ -6,6 +6,7 @@ use eeprom24x::page_size::B8;
 use eeprom24x::addr_size::OneByte;
 
 #[repr(C)]
+#[derive(Debug, PartialEq)]
 pub struct RossDeviceInfo {
     pub device_address: u16,
     pub firmware_version: u32,
@@ -13,6 +14,7 @@ pub struct RossDeviceInfo {
     pub program_info_address: u32,
 }
 
+#[derive(Debug)]
 pub struct RossEeprom<I2C, PS, AS> {
     driver: Eeprom24x<I2C, PS, AS,>,
     device_info_address: u32,
