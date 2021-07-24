@@ -1,4 +1,4 @@
-use core::mem::{size_of, transmute};
+use core::mem::{size_of, transmute, transmute_copy};
 use cortex_m::prelude::*;
 use stm32f1xx_hal::delay::Delay;
 use eeprom24x::{Eeprom24x, Error};
@@ -41,9 +41,9 @@ impl<I2C, E> RossEeprom<I2C, B8, OneByte> where
         Ok(device_info)
     }
 
-    pub fn write_device_info(&mut self, device_info: RossDeviceInfo, delay: &mut Delay) -> Result<(), Error<E>> {
+    pub fn write_device_info(&mut self, device_info: &RossDeviceInfo, delay: &mut Delay) -> Result<(), Error<E>> {
         let data: [u8; size_of::<RossDeviceInfo>()] = unsafe {
-            transmute(device_info)
+            transmute_copy(device_info)
         };
 
         self.write_data(self.device_info_address, &data, delay)?;
