@@ -1,6 +1,6 @@
 use core::mem::{size_of, transmute, transmute_copy};
 use cortex_m::prelude::*;
-use stm32f1xx_hal::delay::Delay;
+use stm32f1xx_hal_bxcan::delay::Delay;
 use eeprom24x::{Eeprom24x, Error};
 use eeprom24x::page_size::B8;
 use eeprom24x::addr_size::OneByte;
