@@ -30,7 +30,7 @@ impl<I2C, E> RossEeprom<I2C, B8, OneByte> where
         }
     }
 
-    pub fn read_device_info(&mut self) -> Result<RossDeviceInfo, Error<E>> {
+    pub fn read_device_info(&mut self) -> nb::Result<RossDeviceInfo, Error<E>> {
         let mut data = [0u8; size_of::<RossDeviceInfo>()];
         self.driver.read_data(self.device_info_address, &mut data)?;
 
@@ -41,7 +41,7 @@ impl<I2C, E> RossEeprom<I2C, B8, OneByte> where
         Ok(device_info)
     }
 
-    pub fn write_device_info(&mut self, device_info: &RossDeviceInfo, delay: &mut Delay) -> Result<(), Error<E>> {
+    pub fn write_device_info(&mut self, device_info: &RossDeviceInfo, delay: &mut Delay) -> nb::Result<(), Error<E>> {
         let data: [u8; size_of::<RossDeviceInfo>()] = unsafe {
             transmute_copy(device_info)
         };
@@ -51,7 +51,7 @@ impl<I2C, E> RossEeprom<I2C, B8, OneByte> where
         Ok(())
     }
 
-    pub fn write_data(&mut self, address: u32, data: &[u8], delay: &mut Delay) -> Result<(), Error<E>> {
+    pub fn write_data(&mut self, address: u32, data: &[u8], delay: &mut Delay) -> nb::Result<(), Error<E>> {
         let (page_count, slice_offset): (usize, usize) = if address % 8 == 0 {
             (
                 (data.len() - 1) / 8 + 1,
