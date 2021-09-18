@@ -7,7 +7,7 @@ use eeprom24x::addr_size::OneByte;
 
 #[repr(C)]
 #[derive(Debug, PartialEq)]
-pub struct RossDeviceInfo {
+pub struct DeviceInfo {
     pub device_address: u16,
     pub firmware_version: u32,
     pub peripheral_info_address: u32,
@@ -15,14 +15,14 @@ pub struct RossDeviceInfo {
 }
 
 #[derive(Debug)]
-pub struct RossEeprom<I2C, PS, AS> {
+pub struct Eeprom<I2C, PS, AS> {
     driver: Eeprom24x<I2C, PS, AS,>,
     device_info_address: u32,
 }
 
-pub type RossEepromError = eeprom24x::Error<nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>;
+pub type EepromError = eeprom24x::Error<nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>;
 
-impl<I2C> RossEeprom<I2C, B8, OneByte> where
+impl<I2C> Eeprom<I2C, B8, OneByte> where
     I2C: _embedded_hal_blocking_i2c_WriteRead<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>> + _embedded_hal_blocking_i2c_Write<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>,
 {
     pub fn new(driver: Eeprom24x<I2C, B8, OneByte>, device_info_address: u32) -> Self {
@@ -32,8 +32,8 @@ impl<I2C> RossEeprom<I2C, B8, OneByte> where
         }
     }
 
-    pub fn read_device_info(&mut self) -> Result<RossDeviceInfo, RossEepromError> {
-        let mut data = [0u8; size_of::<RossDeviceInfo>()];
+    pub fn read_device_info(&mut self) -> Result<DeviceInfo, EepromError> {
+        let mut data = [0u8; size_of::<DeviceInfo>()];
 
         self.read_data(self.device_info_address, &mut data)?;
 
@@ -44,8 +44,8 @@ impl<I2C> RossEeprom<I2C, B8, OneByte> where
         Ok(device_info)
     }
 
-    pub fn write_device_info(&mut self, device_info: &RossDeviceInfo, delay: &mut Delay) -> Result<(), RossEepromError> {
-        let data: [u8; size_of::<RossDeviceInfo>()] = unsafe {
+    pub fn write_device_info(&mut self, device_info: &DeviceInfo, delay: &mut Delay) -> Result<(), EepromError> {
+        let data: [u8; size_of::<DeviceInfo>()] = unsafe {
             transmute_copy(device_info)
         };
 
@@ -54,7 +54,7 @@ impl<I2C> RossEeprom<I2C, B8, OneByte> where
         Ok(())
     }
 
-    pub fn read_data(&mut self, address: u32, data: &mut [u8]) -> Result<(), RossEepromError> {
+    pub fn read_data(&mut self, address: u32, data: &mut [u8]) -> Result<(), EepromError> {
         loop {
             match self.driver.read_data(address, data) {
                 Err(eeprom24x::Error::I2C(nb::Error::WouldBlock)) => continue,
@@ -64,7 +64,7 @@ impl<I2C> RossEeprom<I2C, B8, OneByte> where
         }
     }
 
-    pub fn write_data(&mut self, address: u32, data: &[u8], delay: &mut Delay) -> Result<(), RossEepromError> {
+    pub fn write_data(&mut self, address: u32, data: &[u8], delay: &mut Delay) -> Result<(), EepromError> {
         let (page_count, slice_offset): (usize, usize) = if address % 8 == 0 {
             (
                 (data.len() - 1) / 8 + 1,
