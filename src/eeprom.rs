@@ -154,7 +154,8 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
             data.insert(i, *byte);
         }
 
-        self.write_data(self.device_info_address, &data, delay)?;
+        let device_info = self.read_device_info()?;
+        self.write_data(device_info.event_processor_info_address, &data, delay)?;
 
         Ok(())
     }
