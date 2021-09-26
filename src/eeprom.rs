@@ -423,6 +423,15 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
 
     fn read_producer_from_vec(data: &Vec<u8>, offset: &mut usize, extractor_code: u16) -> Box<dyn Producer> {
         match extractor_code {
+            NONE_PRODUCER_CODE => {
+                unsafe {
+                    const SIZE: usize = size_of::<NoneProducer>();
+                    let producer = Box::new(transmute_copy::<[u8; SIZE], NoneProducer>(data[*offset..*offset + SIZE].try_into().unwrap()));
+                    *offset += SIZE;
+
+                    return producer;
+                }
+            },
             BCM_CHANGE_BRIGHTNESS_PRODUCER_CODE => {
                 unsafe {
                     const SIZE: usize = size_of::<BcmChangeBrightnessProducer>();
