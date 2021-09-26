@@ -445,7 +445,15 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
     }
 
     fn write_producer_to_vec(data: &mut Vec<u8>, producer: &Box<dyn Producer>) {
-        if let Some(producer) = producer.downcast_ref::<BcmChangeBrightnessProducer>() {
+        if let Some(producer) = producer.downcast_ref::<NoneProducer>() {
+            Self::write_u16_to_vec(data, NONE_PRODUCER_CODE);
+
+            unsafe {
+                for byte in transmute_copy::<NoneProducer, [u8; size_of::<NoneProducer>()]>(producer).iter() {
+                    data.push(*byte);
+                }
+            }
+        } else if let Some(producer) = producer.downcast_ref::<BcmChangeBrightnessProducer>() {
             Self::write_u16_to_vec(data, BCM_CHANGE_BRIGHTNESS_PRODUCER_CODE);
 
             unsafe {
