@@ -8,8 +8,8 @@ use core::mem::{size_of, transmute, transmute_copy};
 use cortex_m::prelude::*;
 use stm32f1xx_hal_bxcan::delay::Delay;
 use eeprom24x::Eeprom24x;
-use eeprom24x::page_size::B8;
-use eeprom24x::addr_size::OneByte;
+use eeprom24x::page_size::B32;
+use eeprom24x::addr_size::TwoBytes;
 
 use ross_config::event_processor::EventProcessor;
 use ross_config::matcher::*;
@@ -29,16 +29,16 @@ pub struct DeviceInfo {
 
 #[derive(Debug)]
 pub struct Eeprom<I2C, PS, AS> {
-    driver: Eeprom24x<I2C, PS, AS,>,
+    driver: Eeprom24x<I2C, PS, AS>,
     device_info_address: u32,
 }
 
 pub type EepromError = eeprom24x::Error<nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>;
 
-impl<I2C> Eeprom<I2C, B8, OneByte> where
+impl<I2C> Eeprom<I2C, B32, TwoBytes> where
     I2C: _embedded_hal_blocking_i2c_WriteRead<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>> + _embedded_hal_blocking_i2c_Write<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>,
 {
-    pub fn new(driver: Eeprom24x<I2C, B8, OneByte>, device_info_address: u32) -> Self {
+    pub fn new(driver: Eeprom24x<I2C, B32, TwoBytes>, device_info_address: u32) -> Self {
         Self {
             driver,
             device_info_address,
