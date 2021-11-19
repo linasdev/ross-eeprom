@@ -8,7 +8,20 @@ use crate::DeviceInfo;
 use crate::device_info::*;
 
 #[test]
-fn read_from_array_device_info_reader_test() {
+fn read_from_vec_device_info_reader_wrong_size_test() {
+    let data = vec!(
+        0x23, 0x01, 0x00, 0x00,
+        0xab, 0x89, 0x67, 0x45,
+        0x23, 0x01, 0xef,
+    );
+
+    let err = DeviceInfoReader::read_from_vec(&data).unwrap_err();
+
+    assert_eq!(DeviceInfoError::WrongSize, err);
+}
+
+#[test]
+fn read_from_vec_device_info_reader_test() {
     let data = vec!(
         0x23, 0x01, 0x00, 0x00, // device_address
         0xab, 0x89, 0x67, 0x45, // firmware_version
@@ -23,7 +36,7 @@ fn read_from_array_device_info_reader_test() {
 }
 
 #[test]
-fn write_to_array_device_info_writer_test() {
+fn write_to_vec_device_info_writer_test() {
     let device_info = DeviceInfo {
         device_address: 0x0123,
         firmware_version: 0x456789ab,

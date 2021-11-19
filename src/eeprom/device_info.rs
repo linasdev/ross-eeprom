@@ -8,13 +8,19 @@ use crate::DeviceInfo;
 
 const DEVICE_INFO_LEN: usize = size_of::<DeviceInfo>();
 
-#[derive(Debug)]
-pub enum DeviceInfoError {}
+#[derive(Debug, PartialEq)]
+pub enum DeviceInfoError {
+    WrongSize,
+}
 
 pub struct DeviceInfoReader {}
 
 impl DeviceInfoReader {
     pub fn read_from_vec(data: &Vec<u8>) -> Result<DeviceInfo, DeviceInfoError> {
+        if data.len() != DEVICE_INFO_LEN {
+            return Err(DeviceInfoError::WrongSize);
+        }
+
         let device_info: DeviceInfo = unsafe {
             transmute::<[u8; DEVICE_INFO_LEN], DeviceInfo>(data[..].try_into().unwrap())
         };
