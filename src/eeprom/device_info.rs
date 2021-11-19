@@ -1,3 +1,6 @@
+extern crate alloc;
+
+use alloc::vec::Vec;
 use core::convert::TryInto;
 use core::mem::{size_of, transmute, transmute_copy};
 
@@ -11,7 +14,7 @@ pub enum DeviceInfoError {}
 pub struct DeviceInfoReader {}
 
 impl DeviceInfoReader {
-    pub fn read_from_array(data: &[u8; DEVICE_INFO_LEN]) -> Result<DeviceInfo, DeviceInfoError> {
+    pub fn read_from_vec(data: &Vec<u8>) -> Result<DeviceInfo, DeviceInfoError> {
         let device_info: DeviceInfo = unsafe {
             transmute::<[u8; DEVICE_INFO_LEN], DeviceInfo>(data[..].try_into().unwrap())
         };
@@ -23,9 +26,11 @@ impl DeviceInfoReader {
 pub struct DeviceInfoWriter {}
 
 impl DeviceInfoWriter {
-    pub fn write_to_array(data: &mut [u8; DEVICE_INFO_LEN], device_info: &DeviceInfo) -> Result<(), DeviceInfoError> {
-        *data = unsafe {
-            transmute_copy(device_info)
+    pub fn write_to_vec(data: &mut Vec<u8>, device_info: &DeviceInfo) -> Result<(), DeviceInfoError> {
+        unsafe {
+            for byte in transmute_copy::<DeviceInfo, [u8; DEVICE_INFO_LEN]>(device_info).iter() {
+                data.push(*byte);
+            }
         };
 
         Ok(())

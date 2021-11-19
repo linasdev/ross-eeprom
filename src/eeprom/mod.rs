@@ -53,20 +53,21 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
     }
 
     pub fn read_device_info(&mut self) -> Result<DeviceInfo, EepromError> {
-        let mut data = [0u8; size_of::<DeviceInfo>()];
+        let mut data = vec!();
+        data.resize(size_of::<DeviceInfo>(), 0x00);
 
         self.read_data(self.device_info_address, &mut data)?;
 
-        match DeviceInfoReader::read_from_array(&data) {
+        match DeviceInfoReader::read_from_vec(&data) {
             Ok(device_info) => Ok(device_info),
             Err(err) => Err(EepromError::DeviceInfoError(err)),
         }
     }
 
     pub fn write_device_info(&mut self, device_info: &DeviceInfo, delay: &mut Delay) -> Result<(), EepromError> {
-        let mut data = [0u8; size_of::<DeviceInfo>()];
+        let mut data = vec!();
 
-        if let Err(err) = DeviceInfoWriter::write_to_array(&mut data, device_info) {
+        if let Err(err) = DeviceInfoWriter::write_to_vec(&mut data, device_info) {
             return Err(EepromError::DeviceInfoError(err));
         }
 
