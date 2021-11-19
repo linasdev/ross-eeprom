@@ -4,7 +4,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use alloc::boxed::Box;
 use core::convert::TryInto;
-use core::mem::{size_of, transmute, transmute_copy};
+use core::mem::{size_of, transmute_copy};
 use cortex_m::prelude::*;
 use stm32f1xx_hal_bxcan::delay::Delay;
 use eeprom24x::Eeprom24x;
@@ -18,6 +18,10 @@ use ross_config::filter::*;
 use ross_config::filter::state_filter::*;
 use ross_config::producer::*;
 use ross_config::producer::state_producer::*;
+
+use device_info::*;
+
+pub mod device_info;
 
 #[repr(C)]
 #[derive(Debug, PartialEq)]
@@ -33,7 +37,10 @@ pub struct Eeprom<I2C, PS, AS> {
     device_info_address: u32,
 }
 
-pub type EepromError = eeprom24x::Error<nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>;
+pub enum EepromError {
+    Eeprom24xError(eeprom24x::Error<nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>),
+    DeviceInfoError(DeviceInfoError),
+}
 
 impl<I2C> Eeprom<I2C, B32, TwoBytes> where
     I2C: _embedded_hal_blocking_i2c_WriteRead<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>> + _embedded_hal_blocking_i2c_Write<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>,
@@ -50,17 +57,18 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
 
         self.read_data(self.device_info_address, &mut data)?;
 
-        let device_info = unsafe {
-            transmute(data)
-        };
-
-        Ok(device_info)
+        match DeviceInfoReader::read_from_array(&data) {
+            Ok(device_info) => Ok(device_info),
+            Err(err) => Err(EepromError::DeviceInfoError(err)),
+        }
     }
 
     pub fn write_device_info(&mut self, device_info: &DeviceInfo, delay: &mut Delay) -> Result<(), EepromError> {
-        let data: [u8; size_of::<DeviceInfo>()] = unsafe {
-            transmute_copy(device_info)
-        };
+        let mut data = [0u8; size_of::<DeviceInfo>()];
+
+        if let Err(err) = DeviceInfoWriter::write_to_array(&mut data, device_info) {
+            return Err(EepromError::DeviceInfoError(err));
+        }
 
         self.write_data(self.device_info_address, &data, delay)?;
 
@@ -164,7 +172,7 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
         loop {
             match self.driver.read_data(address, data) {
                 Err(eeprom24x::Error::I2C(nb::Error::WouldBlock)) => continue,
-                Err(err) => return Err(err),
+                Err(err) => return Err(EepromError::Eeprom24xError(err)),
                 Ok(_) => return Ok(()),
             }
         }
@@ -194,7 +202,7 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
             loop {
                 match self.driver.write_page(address, &data[0..slice_end]) {
                     Err(eeprom24x::Error::I2C(nb::Error::WouldBlock)) => continue,
-                    Err(err) => return Err(err),
+                    Err(err) => return Err(EepromError::Eeprom24xError(err)),
                     Ok(_) => break,
                 }
             }
@@ -215,7 +223,7 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
             loop {
                 match self.driver.write_page(address + (slice_start as u32), &data[slice_start..slice_end]) {
                     Err(eeprom24x::Error::I2C(nb::Error::WouldBlock)) => continue,
-                    Err(err) => return Err(err),
+                    Err(err) => return Err(EepromError::Eeprom24xError(err)),
                     Ok(_) => break,
                 }
             }
