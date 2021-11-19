@@ -2,18 +2,12 @@ extern crate alloc;
 
 use alloc::vec;
 
-use core::mem::size_of;
-
 use crate::DeviceInfo;
 use crate::device_info::*;
 
 #[test]
 fn read_from_vec_device_info_reader_wrong_size_test() {
-    let data = vec!(
-        0x23, 0x01, 0x00, 0x00,
-        0xab, 0x89, 0x67, 0x45,
-        0x23, 0x01, 0xef,
-    );
+    let data = vec!();
 
     let err = DeviceInfoReader::read_from_vec(&data).unwrap_err();
 
