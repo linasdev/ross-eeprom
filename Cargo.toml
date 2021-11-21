@@ -1,6 +1,6 @@
 [package]
 name = "ross-eeprom"
-version = "1.8.0"
+version = "1.9.0"
 authors = ["Linas Nikiperavičius <linas@linasdev.com>"]
 edition = "2018"
 license-file = "LICENSE.md"
