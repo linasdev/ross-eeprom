@@ -44,7 +44,7 @@ macro_rules! impl_item_write {
     };
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum EventProcessorError {
     WrongSize,
     UnknownExtractor,

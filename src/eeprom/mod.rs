@@ -32,6 +32,7 @@ pub struct Eeprom<I2C, PS, AS> {
     device_info_address: u32,
 }
 
+#[derive(Debug)]
 pub enum EepromError {
     Eeprom24xError(eeprom24x::Error<nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>),
     DeviceInfoError(DeviceInfoError),

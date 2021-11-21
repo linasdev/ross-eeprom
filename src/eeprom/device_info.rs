@@ -8,7 +8,7 @@ use crate::DeviceInfo;
 
 const DEVICE_INFO_LEN: usize = size_of::<DeviceInfo>();
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum DeviceInfoError {
     WrongSize,
 }
