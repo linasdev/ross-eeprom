@@ -17,7 +17,7 @@ use ross_config::config::{Config, ConfigSerializer, ConfigSerializerError};
 #[derive(Debug, PartialEq)]
 pub struct DeviceInfo {
     pub device_address: u16,
-    pub event_processor_info_address: u32,
+    pub config_address: u32,
 }
 
 #[derive(Debug)]
@@ -80,13 +80,13 @@ where
         let device_info = self.read_device_info()?;
 
         let mut data = [0u8; size_of::<u32>()];
-        self.read_data(device_info.event_processor_info_address, &mut data)?;
+        self.read_data(device_info.config_address, &mut data)?;
 
         let data_len = u32::from_be_bytes(data[0..=3].try_into().unwrap());
         let mut data = vec![0x00; data_len as usize];
 
         self.read_data(
-            device_info.event_processor_info_address + size_of::<u32>() as u32,
+            device_info.config_address + size_of::<u32>() as u32,
             &mut data,
         )?;
 
@@ -96,8 +96,8 @@ where
     pub fn write_config_data(&mut self, data: &Vec<u8>, delay: &mut Delay) -> Result<(), EepromError> {
         let device_info = self.read_device_info()?;
 
-        self.write_data(device_info.event_processor_info_address, &u32::to_be_bytes(data.len() as u32), delay)?;
-        self.write_data(device_info.event_processor_info_address + size_of::<u32>() as u32, data, delay)?;
+        self.write_data(device_info.config_address, &u32::to_be_bytes(data.len() as u32), delay)?;
+        self.write_data(device_info.config_address + size_of::<u32>() as u32, data, delay)?;
 
         Ok(())
     }
