@@ -6,10 +6,10 @@ use alloc::vec::Vec;
 use core::convert::TryInto;
 use core::mem::{size_of, transmute, transmute_copy};
 use cortex_m::prelude::*;
-use stm32f1xx_hal_bxcan::delay::Delay;
-use eeprom24x::Eeprom24x;
-use eeprom24x::page_size::B32;
 use eeprom24x::addr_size::TwoBytes;
+use eeprom24x::page_size::B32;
+use eeprom24x::Eeprom24x;
+use stm32f1xx_hal_bxcan::delay::Delay;
 
 use ross_config::config::{Config, ConfigSerializer, ConfigSerializerError};
 
@@ -32,8 +32,10 @@ pub enum EepromError {
     ConfigSerializerError(ConfigSerializerError),
 }
 
-impl<I2C> Eeprom<I2C, B32, TwoBytes> where
-    I2C: _embedded_hal_blocking_i2c_WriteRead<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>> + _embedded_hal_blocking_i2c_Write<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>,
+impl<I2C> Eeprom<I2C, B32, TwoBytes>
+where
+    I2C: _embedded_hal_blocking_i2c_WriteRead<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>
+        + _embedded_hal_blocking_i2c_Write<Error = nb::Error<stm32f1xx_hal_bxcan::i2c::Error>>,
 {
     pub fn new(driver: Eeprom24x<I2C, B32, TwoBytes>, device_info_address: u32) -> Self {
         Self {
@@ -54,11 +56,17 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
         Ok(device_info)
     }
 
-    pub fn write_device_info(&mut self, device_info: &DeviceInfo, delay: &mut Delay) -> Result<(), EepromError> {
+    pub fn write_device_info(
+        &mut self,
+        device_info: &DeviceInfo,
+        delay: &mut Delay,
+    ) -> Result<(), EepromError> {
         let mut data = Vec::with_capacity(size_of::<DeviceInfo>());
 
         unsafe {
-            for byte in transmute_copy::<DeviceInfo, [u8; size_of::<DeviceInfo>()]>(device_info).iter() {
+            for byte in
+                transmute_copy::<DeviceInfo, [u8; size_of::<DeviceInfo>()]>(device_info).iter()
+            {
                 data.push(*byte);
             }
         }
@@ -77,13 +85,17 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
         let data_len = u32::from_be_bytes(data[0..=3].try_into().unwrap());
         let mut data = vec![0x00; data_len as usize];
 
-        self.read_data(device_info.event_processor_info_address + size_of::<u32>() as u32, &mut data)?;
+        self.read_data(
+            device_info.event_processor_info_address + size_of::<u32>() as u32,
+            &mut data,
+        )?;
 
         ConfigSerializer::deserialize(&data).map_err(|err| EepromError::ConfigSerializerError(err))
     }
 
     pub fn write_config(&mut self, config: &Config, delay: &mut Delay) -> Result<(), EepromError> {
-        let mut data = ConfigSerializer::serialize(config).map_err(|err| EepromError::ConfigSerializerError(err))?;
+        let mut data = ConfigSerializer::serialize(config)
+            .map_err(|err| EepromError::ConfigSerializerError(err))?;
 
         for (i, byte) in u32::to_be_bytes(data.len() as u32).iter().enumerate() {
             data.insert(i, *byte);
@@ -104,17 +116,16 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
         }
     }
 
-    pub fn write_data(&mut self, address: u32, data: &[u8], delay: &mut Delay) -> Result<(), EepromError> {
+    pub fn write_data(
+        &mut self,
+        address: u32,
+        data: &[u8],
+        delay: &mut Delay,
+    ) -> Result<(), EepromError> {
         let (page_count, slice_offset): (usize, usize) = if address % 8 == 0 {
-            (
-                (data.len() - 1) / 8 + 1,
-                0
-            )
+            ((data.len() - 1) / 8 + 1, 0)
         } else {
-            (
-                data.len() / 8,
-                8 - (address as usize % 8),
-            )
+            (data.len() / 8, 8 - (address as usize % 8))
         };
 
         // Write part of the first page
@@ -147,7 +158,10 @@ impl<I2C> Eeprom<I2C, B32, TwoBytes> where
             };
 
             loop {
-                match self.driver.write_page(address + (slice_start as u32), &data[slice_start..slice_end]) {
+                match self.driver.write_page(
+                    address + (slice_start as u32),
+                    &data[slice_start..slice_end],
+                ) {
                     Err(eeprom24x::Error::I2C(nb::Error::WouldBlock)) => continue,
                     Err(err) => return Err(EepromError::Eeprom24xError(err)),
                     Ok(_) => break,
