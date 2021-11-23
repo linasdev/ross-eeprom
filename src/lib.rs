@@ -17,7 +17,6 @@ use ross_config::config::{Config, ConfigSerializer, ConfigSerializerError};
 #[derive(Debug, PartialEq)]
 pub struct DeviceInfo {
     pub device_address: u16,
-    pub firmware_version: u32,
     pub event_processor_info_address: u32,
 }
 
