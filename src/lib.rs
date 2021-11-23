@@ -93,20 +93,28 @@ where
         ConfigSerializer::deserialize(&data).map_err(|err| EepromError::ConfigSerializerError(err))
     }
 
+    pub fn write_config_size(&mut self, config_size: u32, delay: &mut Delay) -> Result<(), EepromError> {
+        let device_info = self.read_device_info()?;
+
+        self.write_data(
+            device_info.config_address,
+            &u32::to_be_bytes(config_size),
+            delay,
+        )?;
+
+        Ok(())
+    }
+
     pub fn write_config_data(
         &mut self,
         data: &Vec<u8>,
+        offset: u32,
         delay: &mut Delay,
     ) -> Result<(), EepromError> {
         let device_info = self.read_device_info()?;
 
         self.write_data(
-            device_info.config_address,
-            &u32::to_be_bytes(data.len() as u32),
-            delay,
-        )?;
-        self.write_data(
-            device_info.config_address + size_of::<u32>() as u32,
+            device_info.config_address + offset + size_of::<u32>() as u32,
             data,
             delay,
         )?;
