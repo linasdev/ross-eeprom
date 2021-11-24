@@ -13,7 +13,7 @@ cortex-m = "0.7.2"
 embedded-hal = "0.2.5"
 nb = "1.0.0"
 eeprom24x = "0.3.0"
-ross-config = "1.14.0"
+ross-config = "1.16.0"
 
 [dependencies.stm32f1xx-hal-bxcan]
 version = "0.8.0"
