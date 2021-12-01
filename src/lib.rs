@@ -11,7 +11,8 @@ use eeprom24x::page_size::B32;
 use eeprom24x::Eeprom24x;
 use stm32f1xx_hal_bxcan::delay::Delay;
 
-use ross_config::config::{Config, ConfigSerializer, ConfigSerializerError};
+use ross_config::config::Config;
+use ross_config::serializer::{ConfigSerializer, ConfigSerializerError};
 
 #[repr(C)]
 #[derive(Debug, PartialEq)]
